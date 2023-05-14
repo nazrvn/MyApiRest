@@ -1,8 +1,8 @@
 const express = require('express');
 const app = express();
 const mysql = require('mysql');
-const dotenv = require('dotenv');
 const path = require('path');
+const dotenv = require('dotenv');
 
 dotenv.config({path: './.env'});
 
@@ -23,6 +23,10 @@ const db = mysql.createConnection({
     user: process.env.DATABASE_USER,
     password: process.env.DATABASE_PASSWORD,
     database: process.env.DATABASE
+});
+
+db.on('error', (err) => {
+    console.error('Database connection error:', err);
 });
 
 const publicDirectory = path.join(__dirname, './public');

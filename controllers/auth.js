@@ -11,13 +11,14 @@ const db = mysql.createConnection({
 
 exports.login = async (req, res) => {
     try {
+        console.log(req.body);
       const { email, password } = req.body;
   
-      /* if( !email || !password ) {
+      if( !email || !password ) {
         return res.status(400).render('login', {
           message: 'Please provide an email and password'
         })
-      } */
+      }
   
       db.query('SELECT * FROM users WHERE email = ?', [email], async (error, results) => {
         console.log(results);
