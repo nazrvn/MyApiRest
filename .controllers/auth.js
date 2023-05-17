@@ -12,11 +12,13 @@ const db = mysql.createConnection({
 
 exports.login = async (req, res) => {
     try {
-        console.log(req.body);
-      const { email, password } = req.body;
+    
+      // console.log(req.body);
+  
+    const { email, password } = req.body;
   
       if( !email || !password ) {
-        return res.status(400).render('login', {
+        return res.status(400).json({
           message: 'Please provide an email and password'
         })
       }
@@ -24,7 +26,7 @@ exports.login = async (req, res) => {
       db.query('SELECT * FROM users WHERE email = ?', [email], async (error, results) => {
         console.log(results);
         if( !results || !(await bcrypt.compare(password, results[0].password)) ) {
-          res.status(401).render('login', {
+          res.status(401).res.json({
             message: 'Email or Password is incorrect'
           })
         } else {
@@ -34,7 +36,7 @@ exports.login = async (req, res) => {
             expiresIn: process.env.JWT_EXPIRES_IN
           });
   
-          console.log("The token is: " + token);
+          // console.log("The token is: " + token);
   
           const cookieOptions = {
             expires: new Date(
@@ -44,7 +46,9 @@ exports.login = async (req, res) => {
           }
   
           res.cookie('jwt', token, cookieOptions );
-          res.status(200).redirect("/profile");
+          res.status(200).json({
+            message: 'Great Job ! you have been logged !'
+          })
         }
   
       })
@@ -56,7 +60,8 @@ exports.login = async (req, res) => {
 
 
 exports.register = (req, res) => {
-    console.log(req.body);
+    
+    //console.log(req.body);
 
     //const name = req.body.name;
     //const email = req.body.email;
@@ -70,11 +75,11 @@ exports.register = (req, res) => {
             console.log(error)
         }
         if (results.length > 0){
-            return res.render('register', {
+            return res.json({
                 message: 'That email is already in use !'
             })
         } else if (password !== passwordConfirm){
-            return res.render('register', {
+            return res.json({
                 message: 'Passwords do not match !'
             });
         }
@@ -84,11 +89,14 @@ exports.register = (req, res) => {
 
         db.query('INSERT INTO users SET ?', { name: name, email: email, password: hashedPassword }, (error, results) => {
             if(error){
-                console.log(error);
+                console.log(error)
+                res.status(400).res.json({
+                  message: 'An error occurred'
+                })
             } else {
                 console.log(results);
-                return res.render('register', {
-                    message: 'User Registered !'
+                return res.status(201).json({
+                    message: 'User successfully created'
                 });
             }
         });
@@ -98,7 +106,7 @@ exports.register = (req, res) => {
 
 exports.isLoggedIn = async (req, res, next) => {
 
-    console.log(req.cookies);
+    //console.log(req.cookies);
     if(req.cookies.jwt){
         try {
             // 1) verify token
@@ -106,7 +114,7 @@ exports.isLoggedIn = async (req, res, next) => {
                 req.cookies.jwt,
                 process.env.JWT_SECRET );
 
-                console.log(decoded);
+                //console.log(decoded);
 
             // 2) check is user still exists
             db.query('SELECT * FROM users WHERE id = ?', [decoded.id], (error, results) => {
@@ -135,6 +143,6 @@ exports.logout = async (req, res) => {
     httpOnly: true
   });
 
-  res.status(200).redirect('/')
+  res.status(200).json('You have been logged out !')
 
 }
