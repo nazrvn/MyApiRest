@@ -6,10 +6,6 @@ const authController = require('../controllers/auth');
 router.post('/login', authController.login);
 router.get('/logout', authController.logout); */
 
- module.exports = router;
-
-
-
 const express = require("express");
 const mysql = require("mysql");
 const dotenv = require('dotenv')
