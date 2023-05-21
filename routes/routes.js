@@ -1,19 +1,26 @@
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const connection = require('../db_connect');
+const auth = require('../controllers/auth')
 
 const app = express();
-app.use(express.json());
 
 // Regex
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$/;
 
+app.use(express.json());
+
 // Ajouter un nouvel utilisateur
 router.post('/users', (req, res) => {
-    const newUser = req.body;
     
+    const { lasteName, firstName , password, role, email } = req.body;
+    const newUser = { lasteName, firstName, password, role, email };
+
+    console.log(newUser);
+
     if (!emailRegex.test(newUser.email)) {
       return res.status(400).json({ message: 'Please provide a valid email address' });
     }
@@ -52,7 +59,6 @@ router.get('/users', (req, res) => {
         console.log(err);
         return res.status(500).json({ message: 'An error occurred while retrieving users' });
       }
-  
       res.json(rows);
     });
 });
@@ -126,6 +132,56 @@ router.delete('/users/:userId', (req, res) => {
   
       res.json({ message: 'User successfully deleted' });
     });
+});
+
+// Connexion à un compte existant
+router.post('/login', async (req, res) => {
+  try {
+
+    const { email, password } = req.body;
+
+    if( !email || !password ) {
+      return res.status(400).json({ message: 'Please provide an email and password' })
+    }
+    connection.query('SELECT * FROM users WHERE email = ?', [email], async (error, results) => {
+      //console.log(results);
+      if( !results || !(await bcrypt.compare(password, results[0].password)) ) {
+        res.status(401).json({ message: 'Email or Password is incorrect ❌' })
+      } else {
+        const id = results[0].id;
+
+        const token = jwt.sign({ id }, process.env.JWT_SECRET, {
+          expiresIn: process.env.JWT_EXPIRES_IN
+        });
+
+        const cookieOptions = {
+          expires: new Date(
+            Date.now() + process.env.JWT_COOKIE_EXPIRES * 24 * 60 * 60 * 1000
+          ),
+          httpOnly: true
+        }
+        const { lasteName, firstName, email } = results[0];
+        res.cookie('jwt', token, cookieOptions );
+        res.status(200).json({ message: "You're connected !", lasteName, firstName, email })
+      }
+    })
+  } catch (error) {
+    console.log(error);
+  }
+});
+
+// Information du compte connecter
+router.get('/me', auth.isLoggedIn, (req, res) => {
+
+  if (!req.user) {
+    return res.status(401).json({ message: 'User is not logged in' });
+  }
+  
+  // récuperation des infos de l'uttilisateur par req.user
+  const user = req.user;
+
+  // on retourn les infos
+  res.json(user);
 });
 
 module.exports = router;
