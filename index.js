@@ -13,7 +13,7 @@ app.get('/users/:userId', router);
 app.put('/users/:userId', router);
 app.delete('/users/:userId', router);
 app.post('/login', router);
-app.get('/me', router);
+//app.get('/me', router);
 
 app.listen(4000, () => {
   console.log('Serveur démarré sur le port 4000');

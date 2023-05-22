@@ -170,7 +170,7 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// Information du compte connecter
+/* // Information du compte connecter
 router.get('/me', auth.isLoggedIn, (req, res) => {
 
   if (!req.user) {
@@ -182,6 +182,6 @@ router.get('/me', auth.isLoggedIn, (req, res) => {
 
   // on retourn les infos
   res.json(user);
-});
+}); */
 
 module.exports = router;
